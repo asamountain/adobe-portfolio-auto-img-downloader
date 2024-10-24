@@ -28,6 +28,7 @@ Run the script with the following command:
 ```sh
 python image_downloader.py <URL> [-o OUTPUT]
 
+```
 
 python image_downloader.py https://example-portfolio.com/gallery -o my_images
 
