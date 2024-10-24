@@ -1,3 +1,6 @@
+![Preview Adobe Portfolio Auto IMG Downloader](https://github.com/user-attachments/assets/3e9f2076-419f-4625-b871-bbb37d9aa4bb)
+
+
 # Adobe Portfolio Image Downloader
 
 This project contains a Python script to crawl and download images from an Adobe Portfolio webpage using Selenium. The images are saved into folders named after the last segment of the URL path.
