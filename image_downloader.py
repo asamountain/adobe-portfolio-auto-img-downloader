@@ -101,11 +101,15 @@ def crawl_and_download(url, folder):
     driver.quit()
 
 def main():
-    parser = argparse.ArgumentParser(description="Download images from a specified URL.")
-    parser.add_argument("url", help="The URL of the webpage to crawl")
-    parser.add_argument("-o", "--output", default="downloaded_images", help="Output folder for downloaded images")
-    args = parser.parse_args()
-    crawl_and_download(args.url, args.output)
+    urls = input("Enter the URLs to crawl, separated by commas: ").split(',')
+    folder_names = input("Enter custom folder names separated by commas (press Enter to use URL's name after last slash): ").split(',')
+
+    for url in urls:
+        url = url.strip()
+        folder_name = folder_names.pop(0).strip() if folder_names else url.split('/')[-1]
+        if not folder_name:
+            folder_name = url.split('/')[-1]
+        crawl_and_download(url, folder_name)
 
 if __name__ == "__main__":
     main()
