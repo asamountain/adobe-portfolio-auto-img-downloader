@@ -1,6 +1,13 @@
 # Adobe Portfolio Image Downloader
 
-This project contains a Python script to crawl and download images from an Adobe Portfolio webpage using Selenium. The images are saved into folders named after the last segment of the URL path.
+This Python script allows you to crawl and download images from multiple URLs of Adobe Portfolio pages using Selenium and Requests. The images are saved into custom folders, or the default folder names based on the URL.
+
+## Features
+
+- Download images from multiple URLs.
+- Save images into custom or default folders.
+- Automatically open the download folder in Finder (macOS).
+- Detailed error logging for easier troubleshooting.
 
 ## Requirements
 
@@ -9,39 +16,43 @@ This project contains a Python script to crawl and download images from an Adobe
 - Requests
 - Chrome WebDriver
 
-## Setup
+## Installation
 
-1. **Install necessary packages:**
+1. **Clone the repository**:
+    ```sh
+    git clone https://github.com/yourusername/adobe-portfolio-image-downloader.git
+    cd adobe-portfolio-image-downloader
+    ```
 
+2. **Create and activate a virtual environment**:
+    ```sh
+    python3 -m venv venv
+    source venv/bin/activate  # On Windows, use `venv\Scripts\activate`
+    ```
+
+3. **Install the required packages**:
     ```sh
     pip install selenium requests
     ```
 
-2. **Download Chrome WebDriver:**
-
-    Ensure ChromeDriver is installed and available in your system’s PATH. You can download it from [here](https://sites.google.com/a/chromium.org/chromedriver/downloads).
+4. **Download and setup Chrome WebDriver**:
+    - Make sure `chromedriver` is installed and available in your system PATH.
+    - You can download it from [here](https://sites.google.com/a/chromium.org/chromedriver/downloads).
 
 ## Usage
 
-Run the script with the following command:
+1. **Run the script**:
+    ```sh
+    python3 image_downloader.py
+    ```
+
+2. **Input the URLs and custom folder names**:
+    - Enter the URLs to crawl, separated by commas.
+    - Enter custom folder names separated by commas. If you do not provide a custom name, the default will be the last segment of the URL.
+
+## Example
 
 ```sh
-python image_downloader.py <URL> [-o OUTPUT]
+Enter the URLs to crawl, separated by commas: https://example1.adobe.com/portfolio, https://example2.adobe.com/gallery
+Enter custom folder names separated by commas (press Enter to use URL's name after last slash): portfolio_images, gallery_images
 
-```
-
-python image_downloader.py https://example-portfolio.com/gallery -o my_images
-
-- <URL>: The URL of the Adobe Portfolio webpage to crawl.
-- [-o OUTPUT]: The output folder for downloaded images (optional, default is downloaded_images).
-
-
-## Script Overview
-Download Image Function: This function downloads an image from a URL and saves it to the specified folder with an incremented name.
-Crawl and Download Function: This function uses Selenium to open the webpage, find lightbox elements, and download each image. It organizes the images into a folder named after the last segment of the URL path.
-
-## Important Notes
-Ensure you comply with the website’s terms of service and respect their robots.txt rules.
-Use this script responsibly to avoid overloading the server with requests.
-Issues
-If you encounter any issues or have questions, feel free to reach out!
