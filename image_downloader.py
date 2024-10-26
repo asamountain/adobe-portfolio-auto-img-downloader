@@ -1,12 +1,13 @@
 import argparse
+import os
+import traceback
+import subprocess
+import requests
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.action_chains import ActionChains
-import requests
-import os
-import traceback
 
 def download_image(url, folder, name, index):
     try:
@@ -25,89 +26,76 @@ def download_image(url, folder, name, index):
         print(f"Error: An exception occurred while downloading image from {url}: {str(e)}")
     return False
 
+def setup_webdriver():
+    driver = webdriver.Chrome()
+    driver.maximize_window()
+    return driver
+
+def open_folder_in_finder(folder):
+    subprocess.call(["open", folder])
+
+def get_lightbox_elements(driver, url):
+    driver.get(url)
+    WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, "js-lightbox")))
+    return driver.find_elements(By.CLASS_NAME, "js-lightbox")
+
+def process_image(driver, lightbox, folder, url, index):
+    try:
+        close_button_xpath = '//*[@id="lightbox-img-wrap"]/div[3]'
+        next_button_xpath = '//*[@id="lightbox-img-wrap"]/div[2]'
+        
+        print(f"Processing image {index}")
+        lightbox.click()
+        print("Clicked to open lightbox")
+
+        img_locator = (By.CSS_SELECTOR, "#lightbox-img-wrap img")
+        lightbox_img = WebDriverWait(driver, 30).until(EC.presence_of_element_located(img_locator))
+        print("Lightbox image loaded")
+
+        img_url = lightbox_img.get_attribute("src")
+        print(f"Found image URL for image {index}: {img_url}")
+
+        name = url.split('/')[-1]
+        if download_image(img_url, folder, name, index):
+            print(f"Downloaded image with name: {name}_{index:03d}")
+
+        actions = ActionChains(driver)
+        actions.move_to_element(lightbox_img).perform()
+
+        close_button = driver.find_element(By.XPATH, close_button_xpath)
+        driver.execute_script("arguments[0].scrollIntoView();", close_button)
+        driver.execute_script("arguments[0].click();", close_button)
+        print(f"Closed lightbox for image {index}")
+
+        driver.execute_script("window.scrollBy(0, 100);")
+
+        next_button = driver.find_element(By.XPATH, next_button_xpath)
+        actions.move_to_element(next_button).perform()
+        driver.execute_script("arguments[0].scrollIntoView();", next_button)
+        actions.move_to_element(next_button).perform()
+        driver.execute_script("arguments[0].click();", next_button)
+        print(f"Clicked next button for image {index}")
+    except Exception as e:
+        print(f"Error processing image {index}: {str(e)}")
+        print("Current URL:", driver.current_url)
+        print("Element attempted:", close_button_xpath)
+        print("Stack Trace:", traceback.format_exc())
+
 def crawl_and_download(url, folder):
     print(f"Starting: Crawling {url}")
-    
-    # Open the folder in Finder
-    subprocess.call(["open", folder])
-    driver = webdriver.Chrome()
-    
-    # Maximize the window
-    driver.maximize_window()
-
-    # Navigate to the URL
-    driver.get(url)
-
-    # Wait for the page to load
-    WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, "js-lightbox")))
-    lightbox_elements = driver.find_elements(By.CLASS_NAME, "js-lightbox")
+    driver = setup_webdriver()
+    lightbox_elements = get_lightbox_elements(driver, url)
     print(f"Found {len(lightbox_elements)} lightbox elements")
 
-    os.makedirs(folder, exist_ok=True)
+    if not os.path.exists(folder):
+        print(f"Creating folder: {folder}")
+        os.makedirs(folder, exist_ok=True)
+    
+    open_folder_in_finder(folder)
+    print(f"Downloading images from {len(lightbox_elements)} lightbox elements")
 
     for index, lightbox in enumerate(lightbox_elements, 1):
-        try:
-            print(f"Processing image {index}")
-
-            # Click to open the lightbox
-            lightbox.click()
-            print("Clicked to open lightbox")
-
-            # Wait for the full-resolution image to load in the lightbox
-            img_locator = (By.CSS_SELECTOR, "#lightbox-img-wrap img")
-            lightbox_img = WebDriverWait(driver, 30).until(
-                EC.presence_of_element_located(img_locator)
-            )
-            print("Lightbox image loaded")
-
-            # Get the full-resolution image URL
-            img_url = lightbox_img.get_attribute("src")
-            print(f"Found image URL for image {index}: {img_url}")
-
-            # Extract name from URL
-            name = url.split('/')[-1]
-
-            if download_image(img_url, folder, name, index):
-                print(f"Downloaded image with name: {name}_{index:03d}")
-
-            # Hover over the photo before clicking the close button
-            actions = ActionChains(driver)
-            actions.move_to_element(lightbox_img).perform()  # Hover over the photo
-
-            # Close button interaction
-            close_button_xpath = '//*[@id="lightbox-img-wrap"]/div[3]'
-
-            # Click using JavaScript without waiting for visibility
-            close_button = driver.find_element(By.XPATH, close_button_xpath)
-            driver.execute_script("arguments[0].click();", close_button)
-            print(f"Closed lightbox for image {index}")
-
-            # Scroll down
-            driver.execute_script("window.scrollBy(0, 100);")  # Scroll down slightly
-           
-            # Next button interaction without waiting for visibility
-            next_button_xpath = '//*[@id="lightbox-img-wrap"]/div[2]'
-            
-            # Find the next button
-            next_button = driver.find_element(By.XPATH, next_button_xpath)
-            
-            # Scroll into view
-            actions.move_to_element(next_button).perform()
-            driver.execute_script("arguments[0].scrollIntoView();", next_button)
-            
-            # Hover over the next button
-            actions.move_to_element(next_button).perform()  # Hover over the next button
-
-            # Click using JavaScript if necessary
-            driver.execute_script("arguments[0].click();", next_button)
-            print(f"Clicked next button for image {index}")
-
-        except Exception as e:
-            # Detailed error logging
-            print(f"Error processing image {index}: {str(e)}")
-            print("Current URL:", driver.current_url)
-            print("Element attempted:", close_button_xpath)
-            print("Stack Trace:", traceback.format_exc())
+        process_image(driver, lightbox, folder, url, index)
 
     print(f"Completed: Downloaded images from {len(lightbox_elements)} lightbox elements")
     driver.quit()
