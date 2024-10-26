@@ -27,6 +27,9 @@ def download_image(url, folder, name, index):
 
 def crawl_and_download(url, folder):
     print(f"Starting: Crawling {url}")
+    
+    # Open the folder in Finder
+    subprocess.call(["open", folder])
     driver = webdriver.Chrome()
     
     # Maximize the window
